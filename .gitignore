@@ -1,0 +1,2 @@
+# ignore all .out files recursive from current directory
+**.out
