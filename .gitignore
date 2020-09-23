@@ -1,2 +1,5 @@
 # ignore all .out files recursive from current directory
 **.out
+
+# ignore all .nfs### files recursive from current directory
+**.nfs*
