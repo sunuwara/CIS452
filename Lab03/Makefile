@@ -10,3 +10,10 @@ compile2:
 run2:
 	./sample2.out
 
+compile:
+	gcc -Wall communicating_processes.c -o main.out
+
+run:
+	./main.out
+
+
