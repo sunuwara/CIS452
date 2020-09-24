@@ -1,4 +1,4 @@
-/**************************************************************
+cle/**************************************************************
  * Title: CIS 452 Lab 3: IPC Communicating Processes
  * Authors: Aron Sunuwar & Karan Tamang
  * 
@@ -66,6 +66,7 @@ int main() {
 		
 		// Parent process
 		else {
+		
 			// Install signal handler
 			signal(SIGUSR1, sigHandler);
 			signal(SIGUSR2, sigHandler);
