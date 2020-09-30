@@ -48,9 +48,12 @@ int main()
 void* do_greeting2 (void* arg)
 {
 	int val = rand() % 2;
+	
 
 	// print out message based on val
 	for (int loop = 0;  loop < 10;  loop++) {
+		printf("%d\n", val);
+		sleep(1);
 		if (!val)
 			printf("World\n");
 		else
