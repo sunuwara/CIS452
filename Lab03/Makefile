@@ -16,4 +16,7 @@ compile:
 run:
 	./main.out
 
+clean:
+	rm *.out
+	echo 'Cleaning done'
 
