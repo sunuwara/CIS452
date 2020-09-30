@@ -12,16 +12,18 @@ void* do_greeting (void* arg);
 
 int main()
 {
-    pthread_t thread1;  // thread ID holder
-    int status;         // captures any error code
+	pthread_t thread1;  // thread ID holder
+	int status;         // captures any error code
 
-    // create and start a thread executing the "do_greeting()" function
-    if ((status = pthread_create (&thread1, NULL,  do_greeting, NULL)) != 0) {
-        fprintf (stderr, "thread create error %d: %s\n", status, strerror(status));
-        exit (1);
-    }
-
-    return 0;
+	// create and start a thread executing the "do_greeting()" function
+	if ((status = pthread_create (&thread1, NULL,  do_greeting, NULL)) != 0) {
+		fprintf (stderr, "thread create error %d: %s\n", status, strerror(status));
+		exit (1);
+	}
+	
+	sleep(2);
+	
+	return 0;
 }
 
 void* do_greeting (void* arg)
