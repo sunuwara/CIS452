@@ -17,18 +17,20 @@
 #include <signal.h>
 #include <time.h>
 
+#define MAX_SIZE 50
 // Declare functions
 void* getFile(void* arg);
 void sigHandler(int);
 
 int numRequests = 0;
-pthread_t threadID;
-int status;
+bool endProgram = false;
 
 /* Main program */
 int main() {
 
-	char filename[20];
+	pthread_t threadID;
+	int status;
+	char* input = (char*) malloc(sizeof(char) * MAX_SIZE);
   
 	// Seed time for random generator, only call once
 	srand(time(NULL));
@@ -37,28 +39,39 @@ int main() {
 	signal(SIGINT, sigHandler);
 
 	// Run until terminated with Ctrl + C
-	while(1) {
+	while(endProgram == false) {
 
 		// Get filename as string from user
 		printf("\nEnter a filename: \n");
-		fgets(filename, 20, stdin);
+		fgets(input, MAX_SIZE, stdin);
 
 		// Remove newline and check if input was empty
-		filename[strcspn(filename, "\n")] = 0;
-		if(filename[0] == 0) {
+		input[strcspn(input, "\n")] = 0;
+		if(input[0] == 0) {
 			printf("FILENAME IS EMPTY!!! TRY AGAIN!\n");
 			continue;
 		}
 
-		printf("Searching for \"%s\"... Please wait!\n", filename);
+		printf("Searching for \"%s\"... Please wait!\n", input);
 
 		// spawn child thread and communicate filename requested by user
-		if ((status = pthread_create(&threadID, NULL,  getFile, &filename)) != 0) {
+		if ((status = pthread_create(&threadID, NULL,  getFile, (void*) input)) != 0) {
 			fprintf(stderr, "thread create error: %s\n", strerror(status));
 			exit (1);
 		}
+		
+		// Detach the threads
+		if ((status = pthread_detach(threadID)) != 0) {
+			fprintf (stderr, "detach error %d: %s\n", status, strerror(status));
+			exit (1);
+		}
+		
+		// Incrementing the number of requests
+		numRequests++;
 	}
-
+	
+	free(input);
+	
 	return 0;
 }
 
@@ -86,9 +99,6 @@ void* getFile(void* arg) {
 	// Wake up and print diagnostics
 	printf("\nFile \"%s\" found in %s.\n", filename, foundAt);
 
-	// Incrementing the number of request
-	numRequests++;
-
 	return NULL;
 }
 
@@ -101,13 +111,7 @@ void sigHandler(int sigNum) {
 	if(sigNum == SIGINT) {
 		puts(" received. That's it, I'm shutting you down...\n");
 		printf("Total number of file requests: %d\n", numRequests);
-
-		// Detach the threads
-		if ((status = pthread_detach(threadID)) != 0) {
-			fprintf (stderr, "detach error %d: %s\n", status, strerror(status));
-			exit (1);
-		}
-
-		exit(0);
+		
+		endProgram = true;
 	}
 }
