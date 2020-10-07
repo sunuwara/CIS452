@@ -10,11 +10,17 @@ compile1Mod:
 run1Mod:
 	./sample1_modified.out
 	
-compile:
-	gcc -Wall fileserver.c -o main.out
+compileReader:
+	gcc -Wall reader_shm.c -o reader.out
 
-run:
-	./main.out
+runReader:
+	./reader.out
+	
+compileWriter:
+	gcc -Wall writer_shm.c -o writer.out
+
+runWriter:
+	./writer.out
 
 clean:
 	rm *.out
