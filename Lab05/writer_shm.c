@@ -14,11 +14,12 @@
 void sigHandler(int);
 int shmId;
 char *shmPtr;
+char* input;
 
 int main ()
 {
 	key_t key;
-	char* input = (char*) malloc(sizeof(char) * SHM_SIZE);
+	input = (char*) malloc(sizeof(char) * SHM_SIZE);
 	
 	// Install signal handler for interrupt signal
 	signal(SIGINT, sigHandler);
@@ -85,7 +86,7 @@ void sigHandler(int sigNum) {
 			perror ("can't deallocate\n");
 			exit(1);
 		}
-		
+		free(input);
 		exit(0);
 	}
 }
