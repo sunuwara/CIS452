@@ -3,21 +3,15 @@ compile1:
 
 run1:
 	./sample1.out
+	
+compile1Mod:
+	gcc -Wall sample_program1_modified.c -o sample1_modified.out
 
-compile2:
-	gcc -Wall -pthread sample_program2.c -o sample2.out
-
-run2:
-	./sample2.out
-
-compile3:
-	gcc -Wall -pthread sample_program3.c -o sample3.out
-
-run3:
-	./sample3.out
+run1Mod:
+	./sample1_modified.out
 	
 compile:
-	gcc -Wall -pthread fileserver.c -o main.out
+	gcc -Wall fileserver.c -o main.out
 
 run:
 	./main.out
@@ -25,4 +19,3 @@ run:
 clean:
 	rm *.out
 	echo 'Cleaning done'
-
