@@ -14,10 +14,10 @@
 void sigHandler(int);
 int shmId;
 char *shmPtr;
-char* input;
+char *input;
 
-int main ()
-{
+int main() {
+
 	key_t key;
 	input = (char*) malloc(sizeof(char) * SHM_SIZE);
 	
@@ -36,13 +36,19 @@ int main ()
 		exit(1);
 	}
 	
-	if ((shmPtr = shmat (shmId, 0, 0)) == (void*) -1) {
+	// Attach shared memory segment to address space
+	if ((shmPtr = shmat(shmId, 0, 0)) == (void*) -1) {
 		perror ("can't attach\n");
 		exit (1);
 	}
 	
-	while(1)
-	{
+	while(1) {
+	
+		/* 
+		shmPtr[SHM_SIZE] = 1 means that its readers turn
+		shmPtr[SHM_SIZE] = 0 means that its writers turn
+		*/
+		
 		// Wait until reading is done
 		while(shmPtr[SHM_SIZE] == 1);
 		
@@ -52,14 +58,17 @@ int main ()
 		
 		// Copy the input to shmPtr and print message
 		strncpy(shmPtr, input, SHM_SIZE);
-		printf("Message shared: %s", input);
+		printf("Message shared: %s\n", input);
 		
-		// Reset reader's count to 0
+		/* 
+		shmPtr[SHM_SIZE + sizeof(int)] holds the number of readers 
+		that received the message 
+		*/
+		
+		// Reset readers count to 0
 		shmPtr[SHM_SIZE + sizeof(int)] = 0;
 		
-		printf("Reader's new count: %d\n", shmPtr[SHM_SIZE + sizeof(int)]);
-		
-		// make it readers turn
+		// Make it readers turn
 		shmPtr[SHM_SIZE] = 1;
 	}
 	
@@ -75,18 +84,20 @@ void sigHandler(int sigNum) {
 	if(sigNum == SIGINT) {
 		puts(" received. Closing writer...\n");
 		
+		free(input);
+		
 		// Detach shared memory segment from address space
-		if (shmdt(shmPtr) < 0) {
+		if(shmdt(shmPtr) < 0) {
 			perror ("just can't let go\n");
 			exit (1);
 		}
 
 		// Destroy the shared memory segment
-		if (shmctl(shmId, IPC_RMID, 0) < 0) {
+		if(shmctl(shmId, IPC_RMID, 0) < 0) {
 			perror ("can't deallocate\n");
 			exit(1);
 		}
-		free(input);
+		
 		exit(0);
 	}
 }

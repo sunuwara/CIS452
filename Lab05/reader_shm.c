@@ -9,18 +9,18 @@
 #include <string.h>
 
 #define SHM_SIZE 4096
-#define TURN 0
 
 
 // Declare functions
 void sigHandler(int);
 int shmId;
 char *shmPtr;
+char *readInput;
 
 int main() {
 
 	key_t key;
-	char readInput[SHM_SIZE];
+	readInput = (char*) malloc(sizeof(char) * SHM_SIZE);
 	
 	// Install signal handler for interrupt signal
 	signal(SIGINT, sigHandler);
@@ -46,29 +46,33 @@ int main() {
 	// Do reading until Ctrl + C
 	while(1) {
 		
-		// shmPtr[SHM_SIZE] = 1 means that its readers turn
-		// shmPtr[SHM_SIZE] = 0 means that its writers turn
+		/* 
+		shmPtr[SHM_SIZE] = 1 means that its readers turn
+		shmPtr[SHM_SIZE] = 0 means that its writers turn
+		*/
 		
 		// Wait until a new string has been written
 		while(shmPtr[SHM_SIZE] == 0);
 		
 		// Read from shmPtr up to its size and print message
 		strncpy(readInput, shmPtr, SHM_SIZE);
-		printf("Message recieved: %s\n", readInput);
+		printf("Message recieved: %s", readInput);
 		
-		// find some way to check if both readers are done
-		// after both readers are done then make turn = 0
+		/* 
+		shmPtr[SHM_SIZE + sizeof(int)] holds the number of readers 
+		that received the message 
+		*/
 		
 		// Increment readers count
 		shmPtr[SHM_SIZE + sizeof(int)]++;
-		printf("Current count: %d\n", shmPtr[SHM_SIZE + sizeof(int)]);
+		printf("Current readers count: %d\n", shmPtr[SHM_SIZE + sizeof(int)]);
 		
 		// Wait until both readers read
 		while(shmPtr[SHM_SIZE + sizeof(int)] < 2);
 		
-		printf("New count: %d\n", shmPtr[SHM_SIZE + sizeof(int)]);
+		printf("After waiting readers count: %d\n\n", shmPtr[SHM_SIZE + sizeof(int)]);
 		
-		// make it writers turn
+		// Make it writers turn
 		shmPtr[SHM_SIZE] = 0;
 	}
 
@@ -84,6 +88,8 @@ void sigHandler(int sigNum) {
 	if(sigNum == SIGINT) {
 		puts(" received. Closing reader...\n");
 		
+		free(readInput);
+		
 		// Detach shared memory segment from address space
 		if (shmdt(shmPtr) < 0) {
 			perror ("just can't let go\n");
@@ -95,8 +101,6 @@ void sigHandler(int sigNum) {
 			perror ("can't deallocate\n");
 			exit(1);
 		}
-		
-		//free(shmPtr);
 		
 		exit(0);
 	}
