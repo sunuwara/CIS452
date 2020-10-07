@@ -5,6 +5,8 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <unistd.h>
+#include <signal.h>
+#include <string.h>
 
 #define SHM_SIZE 4096
 #define TURN 0
@@ -18,13 +20,15 @@ char *shmPtr;
 int main() {
 
 	key_t key;
+	char readInput[SHM_SIZE];
 	
 	// Install signal handler for interrupt signal
 	signal(SIGINT, sigHandler);
 	
 	// Generate a passkey shared to get access to the resource
-	if ((key = ftok("/shm", 23)) == (key_t) -1) {
-    		perror("IPC error: ftok"); exit(1);
+	if ((key = ftok("/tmp", 'a')) == (key_t) -1) {
+    		perror("IPC error: ftok"); 
+    		exit(1);
 	}
 	
 	// Create shared memory segment
@@ -49,7 +53,7 @@ int main() {
 		while(shmPtr[SHM_SIZE] == 0);
 		
 		// Read from shmPtr up to its size and print message
-		strncpy(readInput, strPtr, SHM_SIZE);
+		strncpy(readInput, shmPtr, SHM_SIZE);
 		printf("Message recieved: %s\n", readInput);
 		
 		// find some way to check if both readers are done
@@ -67,7 +71,6 @@ int main() {
 		// make it writers turn
 		shmPtr[SHM_SIZE] = 0;
 	}
-	
 
 	return 0;
 }
@@ -92,6 +95,8 @@ void sigHandler(int sigNum) {
 			perror ("can't deallocate\n");
 			exit(1);
 		}
+		
+		//free(shmPtr);
 		
 		exit(0);
 	}
