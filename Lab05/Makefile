@@ -10,11 +10,23 @@ compile1Mod:
 run1Mod:
 	./sample1_modified.out
 	
+debugReader:
+	gcc -Wall -g reader_shm.c -o reader_debug.out
+	
+valgrindReader:
+	valgrind --leak-check=full --track-origins=yes ./reader_debug.out
+	
 compileReader:
 	gcc -Wall reader_shm.c -o reader.out
 
 runReader:
 	./reader.out
+	
+debugWriter:
+	gcc -Wall -g writer_shm.c -o writer_debug.out
+	
+valgrindWriter:
+	valgrind --leak-check=full --track-origins=yes ./writer_debug.out
 	
 compileWriter:
 	gcc -Wall writer_shm.c -o writer.out
