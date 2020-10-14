@@ -12,7 +12,7 @@ compile1:
 	gcc -Wall sample_program1.c -o sample1.out
 
 run1:
-	./sample1.out
+	./sample1.out $$ARGS
 	
 debug:
 	gcc -Wall -g named_semaphore.c -o main.out
