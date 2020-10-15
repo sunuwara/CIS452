@@ -28,7 +28,7 @@ compile:
 	gcc -Wall named_semaphore.c -o main.out
 
 run:
-	./main.out
+	./main.out $$ARGS
 
 clean:
 	rm *.out
