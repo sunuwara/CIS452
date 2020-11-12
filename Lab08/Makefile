@@ -19,7 +19,7 @@ sharedLib:
 	gcc -shared -o libshared.so shared.o
 	
 debug:
-	clang -Wall -g memoryMap.c -o main.out -lefence
+	clang -L/home/sunuwara/repos/CIS452/Lab08 -Wall -g memoryMap.c -o main.out -lefence -lshared
 	
 valgrind:
 	valgrind --leak-check=full \
