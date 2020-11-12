@@ -13,6 +13,26 @@ compile1:
 
 run1:
 	./sp1.out
+
+sharedLib:
+	gcc -c -Wall -Werror -fPIC shared.c
+	gcc -shared -o libshared.so shared.o
+	
+debug:
+	clang -Wall -g memoryMap.c -o main.out -lefence
+	
+valgrind:
+	valgrind --leak-check=full \
+		 --show-leak-kinds=all \
+		 --track-origins=yes \
+		 --verbose \
+		 ./main.out
+
+compile:
+	clang -L/home/sunuwara/repos/CIS452/Lab08 -Wall memoryMap.c -o main.out -lshared
+
+run:
+	./main.out	
 	
 clean:
 	rm *.out
