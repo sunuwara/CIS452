@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define COEFFICIENT 2
+//#define COEFFICIENT 2
+#define COEFFICIENT 64
 #define KB 1024
-#define LOOP 200
+//#define LOOP 200
+#define LOOP 1
 
 int main()
 {
@@ -18,6 +20,7 @@ int main()
 		for (i=0; i<dim; i++)
 			for (j=0; j<dim; j++)
 				intPtr[i * dim + j] = (i + j) % count;
+				//intPtr[j * dim + i] = (i + j) % count;
 
 	free (intPtr);
 	return 0;
