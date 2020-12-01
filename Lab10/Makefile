@@ -30,6 +30,22 @@ compile2:
 run2:
 	./sp2.out
 	
+debug:
+	gcc -Wall -g simple_ls.c -o main.out
+	
+valgrind:
+	valgrind --leak-check=full \
+		 --show-leak-kinds=all \
+		 --track-origins=yes \
+		 --verbose \
+		 ./main.out
+
+compile:
+	gcc -Wall simple_ls.c -o main.out
+
+run:
+	./main.out
+	
 clean:
 	rm *.out
 	echo 'Cleaning done'
