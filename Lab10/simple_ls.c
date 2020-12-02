@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -7,47 +8,121 @@
 #include <string.h>
 #include <time.h>
 
-void emptyArgvOne(DIR *dirPtr);
-void nOption(DIR *dirPtr);
-void iOption(DIR *dirPtr);
 char *createPermissionsStr(struct stat statBuf);
 
 int main(int argc, char *argv[])
 {
-    DIR *dirPtr;
-    //struct dirent *ep; // entry pointer
+    DIR *dirPtr;             // directory pointer
+    struct dirent *entryPtr; // entry pointer
+    struct stat sb;          // stat buffer
+    char timeStr[80];        // timespec to string buffer
+    int optionFlag = 0;      // 0 = no option, 1 = "-i" option, 2 = "-n" option
+    int dirFlag = 0;         // 0 = current directory, 1 = directory at argv[1]/argv[2]
+    int i;                   // argument index integer
+    char path[1000];         // path name to directory files
 
+    // Handle argument error and set flags
     if (argc > 3)
     {
-        printf("Usage: too many arguments\n");
+        printf("Usage: %s <OPTIONAL: options> <OPTIONAL: directory path>\n", argv[0]);
         exit(1);
     }
+    else
+    {
+        if (argc == 1)
+        {
+            optionFlag = 0;
+            dirFlag = 0;
+        }
+        else
+        {
+            if (!strcmp(argv[1], "-i"))
+                optionFlag = 1;
+            else if (!strcmp(argv[1], "-n"))
+                optionFlag = 2;
 
-    // list current directory contents or argv[2] directory contents
-    if (argc <= 2)
+            if (argc == 3)
+                dirFlag = 1;
+            else if (argc == 2 && optionFlag == 0)
+                dirFlag = 1;
+            else
+                dirFlag = 0;
+        }
+    }
+
+    // Open the corresponding directory
+    if (dirFlag == 0)
         dirPtr = opendir(".");
     else
     {
-        dirPtr = opendir(argv[2]);
-        printf("one: %s\n", argv[2]);
-        
-        
+        if (optionFlag == 0)
+        {
+            i = 1;
+            dirPtr = opendir(argv[1]);
+        }
+        else
+        {
+            i = 2;
+            dirPtr = opendir(argv[2]);
+        }
+
+        if (stat(argv[i], &sb) < 0)
+        {
+            perror("stat 1");
+            exit(1);
+        }
+
+        if (!S_ISDIR(sb.st_mode))
+        {
+            printf("Usage: invalid directory\n");
+            exit(1);
+        }
     }
 
-    // if there is no argv[1] then just print out name of each file
-    // if argv[1] is "-n" then give user and group ID for each file (with other info)
-    // if argv[1] is "-i" then give inode # for each file
-    if (argc == 1)
-        emptyArgvOne(dirPtr);
-    else if (!strcmp(argv[1], "-n"))
-        nOption(dirPtr);
-    else if (!strcmp(argv[1], "-i"))
-        iOption(dirPtr);
-    else
+    // Read the directory
+    while ((entryPtr = readdir(dirPtr)))
     {
-        // invalid argument
-        printf("Usage: invalid argument\n");
-        exit(1);
+        if (!strcmp(entryPtr->d_name, ".") || !strcmp(entryPtr->d_name, ".."))
+            continue;
+
+        if (optionFlag == 0)
+            printf("%s\n", entryPtr->d_name);
+        else
+        {
+            // Get info
+            if (dirFlag == 0)
+            {
+                if (stat(entryPtr->d_name, &sb) < 0)
+                {
+                    perror("stat 2");
+                    exit(1);
+                }
+            }
+            else
+            {
+                sprintf(path, "%s/%s", argv[2], entryPtr->d_name);
+                if (lstat(path, &sb) < 0)
+                {
+                    perror("lstat");
+                    exit(1);
+                }
+            }
+
+            if (optionFlag == 1)
+                printf("%ld %8s\n", sb.st_ino, entryPtr->d_name);
+            else if (optionFlag == 2)
+            {
+                strftime(timeStr, 80, "%b %d %H:%M", localtime(&sb.st_ctim.tv_sec));
+
+                printf("%s ", createPermissionsStr(sb));
+                printf("%lu ", sb.st_nlink);
+                printf("%u ", sb.st_uid);
+                printf("%u ", sb.st_gid);
+                printf("%5ld ", sb.st_size);
+                printf("%5s ", timeStr);
+                printf("%5s\n", entryPtr->d_name);
+            }
+        }
     }
 
     closedir(dirPtr);
@@ -55,73 +130,11 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void emptyArgvOne(DIR *dirPtr)
-{
-    struct dirent *ep;
-
-    while ((ep = readdir(dirPtr)))
-    {
-        if (!strcmp(ep->d_name, ".") || !strcmp(ep->d_name, ".."))
-            continue;
-        printf("%s  ", ep->d_name);
-    }
-    printf("\n");
-}
-
-void nOption(DIR *dirPtr)
-{
-    struct dirent *ep;   // entry pointer
-    struct stat sb;      // stat buffer
-    char timeBuffer[80]; // timespec to string buffer
-
-    while ((ep = readdir(dirPtr)))
-    {
-        if (stat(ep->d_name, &sb) < 0)
-        {
-            perror("unsuccessful stat");
-            exit(1);
-        }
-
-        if (!strcmp(ep->d_name, ".") || !strcmp(ep->d_name, ".."))
-            continue;
-
-        strftime(timeBuffer, 80, "%b %d %H:%M", localtime(&sb.st_ctim.tv_sec));
-
-        printf("%s ", createPermissionsStr(sb));
-        printf("%lu ", sb.st_nlink);
-        printf("%u ", sb.st_uid);
-        printf("%u ", sb.st_gid);
-        printf("%5ld ", sb.st_size);
-        printf("%5s ", timeBuffer);
-        printf("%5s\n", ep->d_name);
-    }
-}
-
-void iOption(DIR *dirPtr)
-{
-    struct dirent *ep; // entry pointer
-    struct stat sb;    // stat buffer
-
-    while ((ep = readdir(dirPtr)))
-    {
-        if (stat(ep->d_name, &sb) < 0)
-        {
-            perror("unsuccessful stat");
-            exit(1);
-        }
-
-        if (!strcmp(ep->d_name, ".") || !strcmp(ep->d_name, ".."))
-            continue;
-
-        printf("%ld %8s\n", sb.st_ino, ep->d_name);
-    }
-}
-
 char *createPermissionsStr(struct stat statBuf)
 {
     static char str[11];
 
-    str[0] = (S_ISDIR(statBuf.st_mode)) ? 'd' : '-';
+    str[0] = (S_ISDIR(statBuf.st_mode)) ? 'd' : (S_ISLNK(statBuf.st_mode)) ? 'l' : '-';
     str[1] = (statBuf.st_mode & S_IRUSR) ? 'r' : '-';
     str[2] = (statBuf.st_mode & S_IWUSR) ? 'w' : '-';
     str[3] = (statBuf.st_mode & S_IXUSR) ? 'x' : '-';
