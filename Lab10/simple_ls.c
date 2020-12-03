@@ -1,3 +1,20 @@
+/**************************************************************
+ * Title: CIS 452 Lab 10: File System Interface: simulate ls
+ * Authors: Aron Sunuwar & Karan Tamang
+ * 
+ * Description: This is a program that simulates the ls 
+ 		(directory listing) command. 
+ 		The simulated ls functions are:
+ 		- on current directory
+ 			1. ls		(file names)
+	 		2. ls -i	(user and group ids)
+	 		3. ls -n	(file inode number)
+ 		- on different directory with path
+			4. ls <directory path>
+			5. ls -i <directory path>
+			6. ls -n <directory path>
+ * ***********************************************************/
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
